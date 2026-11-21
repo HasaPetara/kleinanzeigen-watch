@@ -26,9 +26,9 @@ name = "Midea PortaSplit"
 enabled = true
 keyword = "portasplit"            # <- hier steht, was gesucht wird
 zip = "41812"
-radius_km = 200
-price_min = 400                   # <- und hier das Preisfenster
-price_max = 850
+radius_km = 0
+price_min = 0                   # <- und hier das Preisfenster
+price_max = 2000
 only_offers = true                # nur Verkaufsanzeigen, keine Gesuche
 max_per_run = 10                  # hoechstens so viele Nachrichten pro Lauf
 max_age_hours = 0                 # 0 = Alter egal, sonst z.B. 48
