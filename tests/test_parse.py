@@ -101,8 +101,22 @@ class ParseTests(unittest.TestCase):
 
 class FilterTests(unittest.TestCase):
     def setUp(self):
-        cfg = config_module.load(PROJECT_ROOT / "config.toml")
-        self.search = cfg.searches[0]
+        # Bewusst eigene Werte statt config.toml: sonst schlagen die Tests fehl,
+        # sobald jemand in der Config Preis oder Umkreis anpasst.
+        self.search = config_module.Search(
+            name="Midea PortaSplit",
+            keyword="portasplit",
+            zip="41812",
+            radius_km=200,
+            price_min=400,
+            price_max=850,
+            require=["midea", r"porta\s*-?\s*split"],
+            exclude=[
+                r"porta\s*-?\s*split\s*-?\s*cool",
+                r"\b8[.,]?000\b",
+                "ähnlich|aehnlich|vergleichbar",
+            ],
+        )
         self.requires, self.excludes = compile_rules(self.search)
         self.now = datetime(2026, 11, 21, 12, 0)
 
