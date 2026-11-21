@@ -1,10 +1,10 @@
 name: kleinanzeigen-watch
 
-# Alle 5 Minuten (UTC). GitHub ist ungenau: real 5-15 Minuten Verzoegerung.
-# Der Zustand liegt im Actions-Cache, damit nur echte Neuigkeiten gemeldet werden.
+# GitHub-Cron ist unzuverlaessig: trotz "*/5" kamen Laeufe im Abstand von 40 Minuten.
+# Deshalb ein Lauf pro Stunde, der intern alle 5 Minuten prueft (Schleife).
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
       test_message:
@@ -22,7 +22,7 @@ permissions:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 62
     steps:
       - uses: actions/checkout@v4
 
@@ -48,12 +48,22 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: python -m watcher --test-telegram
 
-      - name: Suche pruefen
+      - name: Suche pruefen (12 Durchlaeufe, alle 5 Minuten)
         if: ${{ !inputs.test_message }}
+        shell: bash
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python -m watcher
+        run: |
+          set -o pipefail
+          for i in $(seq 1 12); do
+            echo "===== Durchlauf $i von 12 um $(date -u +%H:%M:%S) UTC ====="
+            python -m watcher || echo "Durchlauf $i fehlgeschlagen - mache weiter"
+            if [ "$i" -lt 12 ]; then
+              echo "warte 5 Minuten ..."
+              sleep 300
+            fi
+          done
 
       - name: Zustand sichern
         if: always() && hashFiles('state.json') != ''
