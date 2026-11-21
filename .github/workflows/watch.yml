@@ -1,0 +1,64 @@
+name: kleinanzeigen-watch
+
+# Alle 5 Minuten (UTC). GitHub ist ungenau: real 5-15 Minuten Verzoegerung.
+# Der Zustand liegt im Actions-Cache, damit nur echte Neuigkeiten gemeldet werden.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: "Nur Testnachricht an Telegram senden"
+        type: boolean
+        default: false
+
+concurrency:
+  group: kleinanzeigen-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Tests
+        run: python -m unittest discover -s tests
+
+      - name: Zustand wiederherstellen
+        uses: actions/cache/restore@v4
+        with:
+          path: state.json
+          key: state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            state-
+
+      - name: Testnachricht
+        if: ${{ inputs.test_message }}
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python -m watcher --test-telegram
+
+      - name: Suche pruefen
+        if: ${{ !inputs.test_message }}
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python -m watcher
+
+      - name: Zustand sichern
+        if: always() && hashFiles('state.json') != ''
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: state.json
+          key: state-${{ github.run_id }}-${{ github.run_attempt }}

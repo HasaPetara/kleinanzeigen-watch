@@ -1,0 +1,14 @@
+[Unit]
+Description=kleinanzeigen-watch - ein Suchlauf
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=watch
+Group=watch
+WorkingDirectory=/opt/kleinanzeigen-watch
+EnvironmentFile=/opt/kleinanzeigen-watch/.env
+ExecStart=/usr/bin/python3 -m watcher
+Nice=10
+TimeoutStartSec=120

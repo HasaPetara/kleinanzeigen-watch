@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------
+# kleinanzeigen-watch – Konfiguration
+#
+# Neuen Suchauftrag anlegen: [[searches]]-Block kopieren, anpassen,
+# fertig. Es muss kein Code geändert werden.
+#
+# Achtung bei Regex: einfache Anfuehrungszeichen ('...') verwenden,
+# wenn ein Backslash vorkommt – sonst frisst TOML ihn.
+# ---------------------------------------------------------------
+
+[telegram]
+# Im Cloud-Betrieb (GitHub Actions) kommen beide Werte aus den Repo-Secrets
+# TG_CHAT_ID und TG_BOT_TOKEN. Hier bleibt es leer, weil das Repo oeffentlich
+# ist. Fuer einen lokalen Test darf man sie eintragen - dann aber NICHT committen.
+chat_id = ""
+token_env = "TG_BOT_TOKEN"        # Name der Umgebungsvariable mit dem Bot-Token
+alert_after_failures = 3          # nach so vielen Fehllaeufen in Folge warnen
+
+[state]
+path = "state.json"
+retention_days = 30               # so lange werden gesehene Anzeigen-IDs behalten
+
+
+[[searches]]
+name = "Midea PortaSplit"
+enabled = true
+keyword = "portasplit"            # <- hier steht, was gesucht wird
+zip = "41812"
+radius_km = 200
+price_min = 400                   # <- und hier das Preisfenster
+price_max = 850
+only_offers = true                # nur Verkaufsanzeigen, keine Gesuche
+max_per_run = 10                  # hoechstens so viele Nachrichten pro Lauf
+max_age_hours = 0                 # 0 = Alter egal, sonst z.B. 48
+
+# ALLE require-Muster muessen zutreffen (case-insensitive Regex).
+# 'porta\s*-?\s*split' faengt PortaSplit, Porta Split und Porta-Split.
+require = ["midea", 'porta\s*-?\s*split']
+
+# KEINES der exclude-Muster darf zutreffen.
+#
+# Warum nicht einfach "cool" als Wort? Weil "cool" auch als Adjektiv in
+# Anzeigentexten steht ("cooles Geraet") und dann echte Treffer wegfallen.
+# Das Muster trifft deshalb nur den Modellnamen "PortaSplit Cool".
+# Wer es hart will, ergaenzt zusaetzlich: '\bcool\b'
+#
+# 'ähnlich|aehnlich' wirft Anzeigen raus, die nur "wie Midea PortaSplit"
+# sind (z.B. "BE COOL BCPSK12KW"), also kein echtes Midea-Geraet.
+exclude = ['porta\s*-?\s*split\s*-?\s*cool', '\b8[.,]?000\b', "ähnlich|aehnlich|vergleichbar"]
