@@ -46,4 +46,4 @@ require = ["midea", 'porta\s*-?\s*split']
 #
 # 'ähnlich|aehnlich' wirft Anzeigen raus, die nur "wie Midea PortaSplit"
 # sind (z.B. "BE COOL BCPSK12KW"), also kein echtes Midea-Geraet.
-exclude = ['porta\s*-?\s*split\s*-?\s*cool', '\b8[.,]?000\b', "ähnlich|aehnlich|vergleichbar"]
+exclude = ['porta\s*-?\s*split\s*-?\s*cool', '(?<!\d)8[ .,]?000(?!\d)', "ähnlich|aehnlich|vergleichbar"]
